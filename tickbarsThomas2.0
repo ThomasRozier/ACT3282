@@ -1,0 +1,35 @@
+#tick bars
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+
+library(xts)
+library(lubridate)
+library(quantmod)
+library(ghyp)
+library(agricolae)
+library(PerformanceAnalytics)
+
+AAPL = read.csv("20210203_AAPL.csv",header=T)
+head(AAPL)
+AAPL$Price <- AAPL$Price/10000
+trade_date <- as.Date("2021-02-03")
+AAPL$timestamp <- as.POSIXct(trade_date) + milliseconds(AAPL$Time)
+
+tick_size <- floor(nrow(AAPL)/96)
+
+AAPL$tick_id <- ceiling(seq_len(nrow(AAPL)) / tick_size)
+
+tickbars <- AAPL[!duplicated(AAPL$tick_id), ]
+
+# Index de fin de chaque tick bar
+tick_ends <- tapply(seq_len(nrow(AAPL)), AAPL$tick_id, tail, 1)
+
+# Plot
+plot(AAPL$timestamp, AAPL$Price, type="l", col="red",
+     xlab="timestamp", ylab="price",
+     main="AAPL price with Tick Bars")
+
+points(AAPL$timestamp[tick_ends],
+       AAPL$Price[tick_ends],
+       pch=18, col="blue")
